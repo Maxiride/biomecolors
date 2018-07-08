@@ -250,7 +250,7 @@ func printPalette(currentPalette []colorful.Color, colors int, group string) {
 	}
 
 	// Make image file
-	toimg, err := os.Create(group + "-palettegens.png")
+	toimg, err := os.Create("./palettes/" + group + "-palettegens.png")
 	if err != nil {
 		fmt.Printf("Error: %v", err)
 		return
