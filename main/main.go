@@ -249,6 +249,7 @@ func printPalette(currentPalette []colorful.Color, colors int, group string) {
 		}
 	}
 
+	os.Mkdir("./palettes", os.ModePerm)
 	// Make image file
 	toimg, err := os.Create("./palettes/" + group + "-palette.png")
 	if err != nil {
