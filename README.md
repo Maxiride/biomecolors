@@ -1,7 +1,7 @@
 # Self-notes
 
 ## Resources
-[http://senritsuki.com/app/lch_color_picker/](Lch color picker)
+[Lch color picker for the palette boundaries](http://senritsuki.com/app/lch_color_picker/)
 
 ## ToDo or to *not* do
 
