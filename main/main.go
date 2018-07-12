@@ -3,17 +3,25 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/png"
 	"io/ioutil"
 	"log"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/lucasb-eyer/go-colorful"
+	"github.com/lucasb-eyer/go-colorful" // Colors managment
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/math/fixed"
+	"gopkg.in/ini.v1" // INI parser
 )
+
+/*
+Global variables declaration
+*/
 
 // biomeList will contain a slice of all the biomes found by getBiomes
 var biomeList []string
@@ -31,7 +39,7 @@ var temperatureGroups = map[string][]string{
 	"Dry":    {""},
 }
 
-var usuedColors [][]float64
+var usedColors [][]float64
 
 func main() {
 	// Prints the number of biomes found, if true it will print also a list of their names
@@ -45,6 +53,7 @@ func main() {
 	for key := range temperatureGroups {
 		fmt.Println(key, len(temperatureGroups[key]))
 	}
+	fmt.Println(temperatureGroups["Snowy"][1])
 
 	prepPalette()
 }
@@ -90,17 +99,18 @@ func assignBiomes() {
 
 // biomeTemp will open each biome config file to retrieve and return its temperature value
 func biomeTemp(s string) float64 {
-	input, _ := ioutil.ReadFile("./WorldBiomes/" + s)
-	lines := strings.Split(string(input), "\n")
-	reTemp := regexp.MustCompile(`\d\.?\d*`)
 
-	var temp float64 // create variable so that it is visible outside the for scope
-	for _, line := range lines {
-		if strings.HasPrefix(line, "BiomeTemperature:") {
-			temp, _ = strconv.ParseFloat(reTemp.FindString(line), 64)
-
-		}
+	input, err := ini.LoadSources(ini.LoadOptions{
+		SkipUnrecognizableLines: true,
+	}, "./WorldBiomes/"+s)
+	if err != nil {
+		fmt.Printf("Fail to read file: %v", err)
+		os.Exit(1)
 	}
+
+	tempS := input.Section("").Key("BiomeTemperature").String()
+	temp, _ := strconv.ParseFloat(tempS, 64)
+
 	return temp
 }
 
@@ -108,28 +118,28 @@ func biomeTemp(s string) float64 {
 // isSnowy, isCold etc
 func prepPalette() {
 
-	usuedColors = [][]float64{}
+	usedColors = [][]float64{}
 	snowyColors := len(temperatureGroups["Snowy"])
 	snowyPalette, err := colorful.SoftPaletteEx(snowyColors, colorful.SoftPaletteSettings{isSnowy, 50, true})
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	usuedColors = [][]float64{}
+	usedColors = [][]float64{}
 	coldColors := len(temperatureGroups["Cold"])
 	coldPalette, err := colorful.SoftPaletteEx(coldColors, colorful.SoftPaletteSettings{isCold, 50, true})
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	usuedColors = [][]float64{}
+	usedColors = [][]float64{}
 	mediumColors := len(temperatureGroups["Medium"])
 	mediumPalette, err := colorful.SoftPaletteEx(mediumColors, colorful.SoftPaletteSettings{isMedium, 50, true})
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	usuedColors = [][]float64{}
+	usedColors = [][]float64{}
 	dryColors := len(temperatureGroups["Dry"])
 	dryPalette, err := colorful.SoftPaletteEx(dryColors, colorful.SoftPaletteSettings{isDry, 50, true})
 	if err != nil {
@@ -152,7 +162,7 @@ func prepPalette() {
 // isUnique gets called by each color setting (isSnowy etc) to check that the color hasn't be already used
 func isUnique(h, c, L float64) bool {
 	// Cycle through the usuedColors slice, if no match is found, returns true and it will be added to the slice
-	for _, color := range usuedColors {
+	for _, color := range usedColors {
 		if color[0] == h && color[1] == c && color[2] == L {
 			//fmt.Println("This color already exist!")
 			//fmt.Println(usuedColors)
@@ -171,7 +181,7 @@ func isSnowy(l, a, b float64) bool {
 	// if the the generated color falls into the criteria, check if it has already been generated
 	if 180.0 < h && h < 280.0 && 0.1 < c && c < 0.5 && L < 0.76 {
 		if unique := isUnique(h, c, L); unique {
-			usuedColors = append(usuedColors, []float64{h, c, L})
+			usedColors = append(usedColors, []float64{h, c, L})
 			ok = true
 		}
 	}
@@ -188,7 +198,7 @@ func isCold(l, a, b float64) bool {
 	// if the the generated color falls into the criteria, check if it has already been generated
 	if 295.0 < h && h < 360.0 && 0.1 < c && c < 0.5 && L < 0.76 {
 		if unique := isUnique(h, c, L); unique {
-			usuedColors = append(usuedColors, []float64{h, c, L})
+			usedColors = append(usedColors, []float64{h, c, L})
 			ok = true
 		}
 	}
@@ -205,7 +215,7 @@ func isMedium(l, a, b float64) bool {
 	// if the the generated color falls into the criteria, check if it has already been generated
 	if 120.0 < h && h < 160.0 && 0.1 < c && c < 0.5 && L < 0.76 {
 		if unique := isUnique(h, c, L); unique {
-			usuedColors = append(usuedColors, []float64{h, c, L})
+			usedColors = append(usedColors, []float64{h, c, L})
 			ok = true
 		}
 	}
@@ -222,7 +232,7 @@ func isDry(l, a, b float64) bool {
 	// if the the generated color falls into the criteria, check if it has already been generated
 	if 65.0 < h && h < 110.0 && 0.1 < c && c < 0.5 && L < 0.76 {
 		if unique := isUnique(h, c, L); unique {
-			usuedColors = append(usuedColors, []float64{h, c, L})
+			usedColors = append(usedColors, []float64{h, c, L})
 			ok = true
 		}
 	}
@@ -232,21 +242,30 @@ func isDry(l, a, b float64) bool {
 
 // printPalette will take in a palette (created in prepPalette), how many colors it contains and its category name (Snowy, Cold etc from temperatureGroups)
 func printPalette(currentPalette []colorful.Color, colors int, group string) {
+	/*
+		The image layout is meant to be on two columns "colored square" "HEX Value" "Biome Name"
+	*/
 
 	// Palette squares side lenght and spacing between each of them
 	blockw := 40
 	space := 5
 
-	// Create image to fit 10 squares per row and as many rows as neeeded to fit all the colors
-	img := image.NewRGBA(image.Rect(0, 0, 10*(blockw+space), colors/10*(blockw+space)))
+	// Create an image with width 800px and height as much as needed to fit everything
+	img := image.NewRGBA(image.Rect(0, 0, 800, colors/2*(blockw+space)))
+
+	// White background
+	draw.Draw(img, image.Rect(0, 0, 800, colors/2*(blockw+space)), image.NewUniform(color.RGBA{255, 255, 255, 255}), image.ZP, draw.Src)
 
 	// Draw on the image
 	i := 0
-	for row := 0; row < colors/10; row++ {
-		for col := 0; col < 10; col++ {
-			draw.Draw(img, image.Rect(col*(blockw+space), row*(blockw+space), col*(blockw+space)+blockw, row*(blockw+space)+blockw), &image.Uniform{currentPalette[i]}, image.ZP, draw.Src)
+	for row := 0; row < colors/2; row++ {
+		for j := 0; j <= 1; j++ {
+			draw.Draw(img, image.Rect(400*j, row*(blockw+space), 400*j+2*blockw, row*(blockw+space)+blockw), &image.Uniform{currentPalette[i]}, image.ZP, draw.Src)
+			addLabel(img, 12+400*j, 25+(row*(blockw+space)), strings.ToUpper(currentPalette[i].Hex()))
+			addLabel(img, 120+400*j, 25+(row*(blockw+space)), temperatureGroups[group][i])
 			i++
 		}
+
 	}
 
 	os.Mkdir("./palettes", os.ModePerm)
@@ -259,4 +278,17 @@ func printPalette(currentPalette []colorful.Color, colors int, group string) {
 	defer toimg.Close()
 
 	png.Encode(toimg, img)
+}
+
+func addLabel(img *image.RGBA, x, y int, label string) {
+	col := color.RGBA{127, 255, 0, 255}
+	point := fixed.Point26_6{fixed.Int26_6(x * 64), fixed.Int26_6(y * 64)}
+
+	d := &font.Drawer{
+		Dst:  img,
+		Src:  image.NewUniform(col),
+		Face: basicfont.Face7x13,
+		Dot:  point,
+	}
+	d.DrawString(label)
 }
