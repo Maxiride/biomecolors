@@ -1,6 +1,6 @@
 # What's this about
 
-This program is born from the necessity to manage a lot of biomes and their associated colours either when assembling a new World Preset or when making a FromImage Map.
+This program is born from the necessity to manage a lot of biomes and their associated colours either when assembling a new World Preset or when making a FromImage Map. It will scan all your biomes and assign them unique colours, cheat sheet reference palettes will also be generated.
 
 ## How does it work
 
