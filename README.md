@@ -1,17 +1,24 @@
-# Self-notes
+# What's this about
 
-## Resources
-[Lch color picker for the palette boundaries](http://senritsuki.com/app/lch_color_picker/)
+This program is born from the necessity to manage a lot of biomes and their associated colours either when assembling a new World Preset or when making a FromImage Map.
 
-## ToDo or to *not* do
+## How does it work
 
-Here are some points that crossed my mind, they aren't a roadmap yet nice things to have. If I will have time and *patience* I will implement them.
-
-* Started implementing loggin, then stopped. Should defentively complete it and output it to a file if things go nuts.
-* Error handling, as of now all the code runs as an ignorant. I've escaped `_` all the err ^^
-* If statement to check if the file is with or without comments, line 23 or line 48 to read? Maybe is there an even better way to fetch the infos I want?
-* Make special case for mushroom biomes? Color them by shades of purple instead of shades of the group temperature.
-
-## Must do
-
-* Learn how VSCode debugging and logging works D:
+In this early stage of the code the program will:
+  1. Scan the WorldBiomes folder to fetch all the present biomes
+  2. Categorize all the biomes found in 4 climate zones (Snowy, Cold, Medium, Dry) according to the [vanilla standards](https://minecraft.gamepedia.com/Biome#Biome_types).
+  3. Generate [4 different palettes](https://github.com/Maxiride/biomecolors/tree/develop/main/palettes) with colours ranging from "coldish" to "dryish" gradients with each colour being enough "distant" from all the others in order to be easily perceived by a human as a different colour according to the CIELab high quality standards.
+  4. [Soon to be implemented] Write the generated colours in the biomes *.bc configuration files.
+  
+  ### Future roadmap
+ 
+ Ideas that need further investigation:
+  - Generate ready to use .ase preset for Photoshop with the generated palettes
+  - Check if biomes are Isle or Border and make a new palette where to group them for quick reference. This will insanely help in drawing smooth FromImage maps with technical biomes as the border ones.
+  - As of now the program will overwrite any previously set BiomeColor, enhancing the code to take in consideration "legacy" biomes to be added to the palettes without being overwritten with a new colour.
+  
+  
+  ## Contributing
+   - Submit ideas and I will consider them =)
+   - Found a bug? Report it ASAP!
+   - enjoy =)
